@@ -1,0 +1,55 @@
+# create a CLusterIP service to expose mysql pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-mysql
+  labels:
+    app: wordpress
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: wordpress
+    tier: mysql
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: wordpress
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:latest
+        name: mysql
+        env:
+        - name: "MYSQL_USER"
+          value: "eazy"
+        - name: "MYSQL_PASSWORD"
+          value: "eazy"
+        - name: "MYSQL_DATABASE"
+          value: "eazytraining"
+        - name: "MYSQL_ROOT_PASSWORD"
+          value: "password"
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mysql-data-volume
+      volumes:
+      - name: mysql-data-volume
+        hostPath:
+          path: /my-sql-data-volume
+          type: DirectoryOrCreate
